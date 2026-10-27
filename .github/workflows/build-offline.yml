@@ -1,0 +1,78 @@
+name: Build Labs Offline APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KOTLIN_VERSION: "2.3.20"
+    steps:
+      - name: Code lo
+        uses: actions/checkout@v4
+
+      - name: Node lagao
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Java lagao
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Fixed signing key lagao
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
+      - name: Python lagao
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Web folder banao
+        run: |
+          mkdir -p www
+          cp index.html www/
+
+      - name: Packages install karo
+        run: npm install
+
+      - name: Android project banao
+        run: npx cap add android
+
+      - name: Phone-AI wala hissa jodo
+        run: python setup_android.py
+
+      - name: Icon banao
+        run: |
+          pip install pillow
+          python make_icons.py
+
+      - name: Web files sync karo
+        run: npx cap sync android
+
+      - name: Gradle files ka haal dikhao
+        run: |
+          echo "===== android/build.gradle ====="
+          cat android/build.gradle
+          echo "===== android/app/build.gradle (aakhri hissa) ====="
+          tail -n 60 android/app/build.gradle
+
+      - name: Debug APK build karo
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: APK upload karo
+        uses: actions/upload-artifact@v4
+        with:
+          name: Labs-Offline-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
