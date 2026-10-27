@@ -38,7 +38,11 @@ jobs:
       - name: Web folder banao
         run: |
           mkdir -p www
-          cp index.html www/
+          # sabse bada version wali labs-offline-vN.html lo, na ho to index.html
+          FILE=$(ls labs-offline-v*.html 2>/dev/null | sort -V | tail -n 1)
+          if [ -z "$FILE" ]; then FILE=index.html; fi
+          echo "App file: $FILE"
+          cp "$FILE" www/index.html
 
       - name: Packages install karo
         run: npm install
