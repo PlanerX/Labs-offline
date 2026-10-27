@@ -1,0 +1,14 @@
+{
+  "name": "labs-offline-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Labs Offline: Anshu ka AI assistant jo phone ke andar chalta hai",
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0"
+  }
+}
