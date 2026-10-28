@@ -9,6 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      # Kotlin ka version. Build me "Kotlin metadata" jaisa error aaye to isko 2.2.20 ya 2.4.0 karke dekho.
       KOTLIN_VERSION: "2.3.20"
     steps:
       - name: Code lo
@@ -44,14 +45,31 @@ jobs:
           echo "App file: $FILE"
           cp "$FILE" www/index.html
 
+      - name: Signing key ka fingerprint dikhao
+        run: |
+          keytool -list -v -keystore debug.keystore -storepass android 2>/dev/null | grep -E "Alias name|SHA256" || true
+
       - name: Packages install karo
         run: npm install
 
       - name: Android project banao
         run: npx cap add android
 
+      - name: Plugin file chuno
+        run: |
+          # sabse bada version wali LabsLlmPlugin-vN.kt lo, na ho to LabsLlmPlugin.kt
+          P=$(ls LabsLlmPlugin-v*.kt 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$P" ]; then cp "$P" LabsLlmPlugin.kt; fi
+          echo "Plugin file: ${P:-LabsLlmPlugin.kt}"
+
       - name: Phone-AI wala hissa jodo
         run: python setup_android.py
+
+      - name: Version number badhao
+        run: |
+          N=${{ github.run_number }}
+          sed -i -E "s/versionCode[[:space:]]*=?[[:space:]]*[0-9]+/versionCode $N/; s/versionName[[:space:]]*=?[[:space:]]*\"[^\"]*\"/versionName \"1.$N\"/" android/app/build.gradle
+          grep -nE "versionCode|versionName" android/app/build.gradle
 
       - name: Icon banao
         run: |
@@ -73,6 +91,11 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
+
+      - name: APK ka signature dikhao
+        run: |
+          AS=$(ls $ANDROID_HOME/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1)
+          "$AS" verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk 2>&1 | grep -E "SHA-256" || true
 
       - name: APK upload karo
         uses: actions/upload-artifact@v4
